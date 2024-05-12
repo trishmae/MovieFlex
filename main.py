@@ -27,6 +27,25 @@ def preprocess_dataframes(tmdb_df):
     
     return newtmdb_df
 
+def language_dataframes(newtmdb_df):
+    english_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
+    filipino_df = newtmdb_df[newtmdb_df['original_language'] == 'tl']
+    korean_df = newtmdb_df[newtmdb_df['original_language'] == 'ko']
+    japanese_df = newtmdb_df[newtmdb_df['original_language'] == 'ja']
+    return english_df, filipino_df, korean_df, japanese_df
+
+def select_language(language, newtmdb_df):
+    english_df, filipino_df, korean_df, japanese_df = language_dataframes(newtmdb_df)
+    if language == 'English':
+        newtmdb_df = english_df
+    if language == 'Filipino':
+        newtmdb_df = filipino_df
+    if language == 'Korean':
+        newtmdb_df = korean_df
+    if language == 'Japanese':
+        newtmdb_df = japanese_df
+    return newtmdb_df
+
 def cluster_movies_by_genre(newtmdb_df):
     """
     Cluster movies by genre and add the cluster labels to the dataframe.

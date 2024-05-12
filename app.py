@@ -1,16 +1,16 @@
 import streamlit as st
-from main import load_data, preprocess_dataframes, cluster_movies_by_genre, recommend_movies_nearest_updated_cosine
+from main import load_data, preprocess_dataframes, cluster_movies_by_genre, recommend_movies_nearest_updated_cosine, select_language
 from tmdbv3api import TMDb, Movie
 import random
 import os
+import sys
 # from dotenv import load_dotenv
 
 # Initialize the TMDb object with your API key
 # load_dotenv()
 
 tmdb = TMDb()
-# tmdb.api_key =  os.getenv("TMDB_API_KEY")
-tmdb.api_key = "ed00837153872a5598073030048dae13"
+tmdb.api_key =  os.getenv("TMDB_API_KEY")
 movie_search = Movie()
 
 BASE_TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w500/"
@@ -55,7 +55,6 @@ def fetch_movie_details(movie_title):
             "overview": "No overview available",
             "genres": "Unknown"
         }
-
 
 def main():
     st.markdown(
@@ -111,9 +110,10 @@ def main():
     
     st.title("🎬💪 MovieFlex: Movie Recommendation System")
 
+    print(sys.maxsize)
+
     tmdb_df = load_data()
     newtmdb_df = preprocess_dataframes(tmdb_df)
-    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
 
     st.write("Welcome to MovieFlex!✨ Get started by entering your favorite movie!")
     auto_trigger = False
@@ -129,11 +129,17 @@ def main():
     if 'surprise_triggered' not in st.session_state:
         st.session_state.surprise_triggered = False
 
-    # Get unique genres from the 'genres' column
-    genres = newtmdb_df['genres'].explode().unique()
+    # Choose a language for the movie results
+    language = st.radio(
+        "Choose a language for the movie results:",
+        ("English", "Filipino", "Korean", "Japanese")
+    )
+    
+    newtmdb_df = select_language(language, newtmdb_df)
+    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
 
-    # Multiselect widget for selecting genres
-    selected_genres = st.multiselect("Select Genres:", genres)
+    # Display the selected option
+    st.write("You selected:", language)
 
     # If reset was triggered, set the default value of the input widget to an empty string
     default_value = "" if st.session_state.reset_triggered else st.session_state.movie_input
@@ -165,6 +171,7 @@ def main():
             st.session_state.recommendations = recommend_movies_nearest_updated_cosine(
                 movie_title, genres_encoded=genres_encoded, newtmdb_df=newtmdb_df
             )
+        display_chosen_movie(st.session_state.movie_input)
         display_recommendations(st.session_state.recommendations)
 
     if col2.button('Surprise Me!', key='btn_surprise_me'):
@@ -185,23 +192,46 @@ def main():
         st.session_state.reset_triggered = True  # Set the reset flag
         st.experimental_rerun()
 
+def display_chosen_movie(movie_title):
+    st.write("You have chosen", movie_title)
+
+    movie_details = fetch_movie_details(movie_title)
+
+    st.markdown(
+                f"""
+                <div class="movie-card" style="display: flex; align-items: center;">
+                    <div style="overflow: hidden; border-radius: 10px; margin-right: 10px;">
+                        <img src="{movie_details['poster']}" alt="{movie_title}" style="width: 150px; height: 225px; object-fit: cover;">
+                    </div>
+                    <div>
+                        <a href="https://www.themoviedb.org/tv/{movie_details['id']}" target="_blank">
+                            <div class="movie-title">{movie_title}</div>
+                        </a>
+                        <p class="movie-info">{movie_details['release_date']} | {movie_details['genres']} | Rating: {movie_details['rating']}</p>
+                        <details>
+                            <summary>Overview</summary>
+                            {movie_details['overview']}
+                        </details>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 def display_recommendations(recommendations):
     if recommendations:
         st.subheader("Recommended Movies:")
-
-        cols = st.columns(len(recommendations))
-
-        for idx, movie in enumerate(recommendations):
+        for movie in recommendations:
             movie_details = fetch_movie_details(movie)
 
-            with cols[idx]:
-                st.markdown(
-                    f"""
-                    <div class="movie-card">
-                        <div style="overflow: hidden; border-radius: 10px;">
-                            <img src="{movie_details['poster']}" alt="{movie}" style="width: 150px; height: 225px; object-fit: cover;">
-                        </div>
+            # Display movie details for each row
+            st.markdown(
+                f"""
+                <div class="movie-card" style="display: flex; align-items: center;">
+                    <div style="overflow: hidden; border-radius: 10px; margin-right: 10px;">
+                        <img src="{movie_details['poster']}" alt="{movie}" style="width: 150px; height: 225px; object-fit: cover;">
+                    </div>
+                    <div>
                         <a href="https://www.themoviedb.org/movie/{movie_details['id']}" target="_blank">
                             <div class="movie-title">{movie}</div>
                         </a>
@@ -211,9 +241,10 @@ def display_recommendations(recommendations):
                             {movie_details['overview']}
                         </details>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
     else:
         st.error("Couldn't find any recommendations for that movie.")
 
