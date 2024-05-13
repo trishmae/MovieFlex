@@ -7,12 +7,18 @@ def load_data():
     Loads the data from the CSV files and returns the datasets.
     """
     tmdb_df = pd.read_csv("TMDB_movie_dataset_v11.csv")
+    # newtmdb_df = pd.read_csv("tmdb_df.csv")
+    # newtmdb_df = pd.read_csv("english_movies2.csv")
+    # tmdb = "https://drive.google.com/file/d/15Yk5gRIeaElTRyRjNO4NK9dsGQbHf9p1/view?usp=sharing"
+    # tmdb = "https://drive.google.com/uc?id=" + tmdb.split('/')[-2]
+    # tmdb_df = pd.read_csv(tmdb)
     return tmdb_df
 
 def preprocess_dataframes(tmdb_df):
     """
     Preprocesses the IMDB and Netflix datasets.
     """
+    load_data()
     # Drop rows with null values in the 'title' column
     tmdb_df.dropna(subset=['title'], inplace=True)
 
@@ -27,23 +33,28 @@ def preprocess_dataframes(tmdb_df):
     
     return newtmdb_df
 
-def language_dataframes(newtmdb_df):
-    english_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
-    filipino_df = newtmdb_df[newtmdb_df['original_language'] == 'tl']
-    korean_df = newtmdb_df[newtmdb_df['original_language'] == 'ko']
-    japanese_df = newtmdb_df[newtmdb_df['original_language'] == 'ja']
-    return english_df, filipino_df, korean_df, japanese_df
+# def language_dataframes(tmdb_df):
+#     newtmdb_df = preprocess_dataframes(tmdb_df)
+#     all_df = newtmdb_df
+#     english_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
+#     # filipino_df = newtmdb_df[newtmdb_df['original_language'] == 'tl']
+#     # korean_df = newtmdb_df[newtmdb_df['original_language'] == 'ko']
+#     # japanese_df = newtmdb_df[newtmdb_df['original_language'] == 'ja']
+#     return english_df, all_df
 
-def select_language(language, newtmdb_df):
-    english_df, filipino_df, korean_df, japanese_df = language_dataframes(newtmdb_df)
+def select_language(language, tmdb_df):
+    # english_df, all_df = language_dataframes(tmdb_df)
+    if language == 'All':
+        newtmdb_df = preprocess_dataframes(tmdb_df)
     if language == 'English':
-        newtmdb_df = english_df
+        newtmdb_df = preprocess_dataframes(tmdb_df)
+        newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
     if language == 'Filipino':
-        newtmdb_df = filipino_df
+        newtmdb_df = pd.read_csv("ph_movies.csv")
     if language == 'Korean':
-        newtmdb_df = korean_df
+        newtmdb_df = pd.read_csv("korean_movies.csv")
     if language == 'Japanese':
-        newtmdb_df = japanese_df
+        newtmdb_df = pd.read_csv("japanese_movies.csv")
     return newtmdb_df
 
 def cluster_movies_by_genre(newtmdb_df):

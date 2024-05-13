@@ -4,10 +4,10 @@ from tmdbv3api import TMDb, Movie
 import random
 import os
 import sys
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 # Initialize the TMDb object with your API key
-# load_dotenv()
+load_dotenv()
 
 tmdb = TMDb()
 tmdb.api_key =  os.getenv("TMDB_API_KEY")
@@ -110,10 +110,10 @@ def main():
     
     st.title("🎬💪 MovieFlex: Movie Recommendation System")
 
-    print(sys.maxsize)
+    # print(sys.maxsize)
 
     tmdb_df = load_data()
-    newtmdb_df = preprocess_dataframes(tmdb_df)
+    # newtmdb_df = preprocess_dataframes(tmdb_df)
 
     st.write("Welcome to MovieFlex!✨ Get started by entering your favorite movie!")
     auto_trigger = False
@@ -132,14 +132,14 @@ def main():
     # Choose a language for the movie results
     language = st.radio(
         "Choose a language for the movie results:",
-        ("English", "Filipino", "Korean", "Japanese")
+        ("All", "English", "Filipino", "Korean", "Japanese")
     )
-    
-    newtmdb_df = select_language(language, newtmdb_df)
-    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
 
     # Display the selected option
     st.write("You selected:", language)
+
+    newtmdb_df = select_language(language, tmdb_df)
+    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
 
     # If reset was triggered, set the default value of the input widget to an empty string
     default_value = "" if st.session_state.reset_triggered else st.session_state.movie_input
@@ -166,7 +166,7 @@ def main():
                     auto_trigger = True  # Setting the flag to trigger automatic recommendations
     col1, col2, col3 = st.columns(3)
 
-    if col1.button('Get Recommendations', key='btn_get_recommendations') or auto_trigger:
+    if col1.button('Search', key='btn_get_recommendations') or auto_trigger:
         with st.spinner('Fetching recommendations...'):
             st.session_state.recommendations = recommend_movies_nearest_updated_cosine(
                 movie_title, genres_encoded=genres_encoded, newtmdb_df=newtmdb_df
