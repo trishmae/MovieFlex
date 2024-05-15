@@ -76,7 +76,7 @@ def main():
     # Choose a language for the movie results
     language = st.radio(
         "Choose a language for the movie results:",
-        ("All", "Filipino", "Korean", "Japanese")
+        ("Filipino", "Korean", "Japanese")
     )
 
     # Display the selected option
@@ -104,12 +104,12 @@ def main():
 
     new_input = st.text_input("🔍 Enter your favorite movie:", value=default_value, key="movie_input")
 
-    tmdb_df = load_data()
+    # tmdb_df = load_data()
 
     if language != st.session_state.language:
         st.session_state.language = language
 
-    newtmdb_df = select_language(st.session_state.language, tmdb_df)
+    newtmdb_df = select_language(st.session_state.language)
     st.session_state.dataset = newtmdb_df
 
     newtmdb_df, genres_encoded = cluster_movies_by_genre(st.session_state.dataset)
@@ -204,7 +204,6 @@ def display_recommendations(recommendations, newtmdb_df):
     # st.write(recommendations)
     
     if st.button("Filter movies"):
-        st.balloons()
         filter_movies = filter_movies_by_genre(recommendations, st.session_state.selected_genres, newtmdb_df)
         # st.write(recommendations)
         recommendations = filter_movies

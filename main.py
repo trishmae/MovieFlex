@@ -33,9 +33,9 @@ def preprocess_dataframes(tmdb_df):
     
     return newtmdb_df
 
-def select_language(language, tmdb_df):
-    if language == 'All':
-        newtmdb_df = tmdb_df
+def select_language(language):
+    # if language == 'All':
+    #     newtmdb_df = tmdb_df
         # newtmdb_df = preprocess_dataframes(tmdb_df)
     # if language == 'English':
     #     newtmdb_df = preprocess_dataframes(tmdb_df)
