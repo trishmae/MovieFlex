@@ -6,12 +6,12 @@ def load_data():
     """
     Loads the data from the CSV files and returns the datasets.
     """
-    tmdb_df = pd.read_csv("datasets/TMDB_movie_dataset_v11.csv")
+    # tmdb_df = pd.read_csv("datasets/TMDB_movie_dataset_v11.csv")
     # newtmdb_df = pd.read_csv("tmdb_df.csv")
     # newtmdb_df = pd.read_csv("english_movies2.csv")
-    # tmdb = "https://drive.google.com/file/d/15Yk5gRIeaElTRyRjNO4NK9dsGQbHf9p1/view?usp=sharing"
-    # tmdb = "https://drive.google.com/uc?id=" + tmdb.split('/')[-2]
-    # tmdb_df = pd.read_csv(tmdb)
+    tmdb = "https://drive.google.com/file/d/19DMYWZJXxPNJ9pbWgVJ2C7k2Yst40ML5/view?usp=sharing"
+    tmdb = "https://drive.google.com/uc?id=" + tmdb.split('/')[-2]
+    tmdb_df = pd.read_csv(tmdb)
     return tmdb_df
 
 def preprocess_dataframes(tmdb_df):
@@ -35,10 +35,11 @@ def preprocess_dataframes(tmdb_df):
 
 def select_language(language, tmdb_df):
     if language == 'All':
-        newtmdb_df = preprocess_dataframes(tmdb_df)
-    if language == 'English':
-        newtmdb_df = preprocess_dataframes(tmdb_df)
-        newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
+        newtmdb_df = tmdb_df
+        # newtmdb_df = preprocess_dataframes(tmdb_df)
+    # if language == 'English':
+    #     newtmdb_df = preprocess_dataframes(tmdb_df)
+    #     newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
     if language == 'Filipino':
         newtmdb_df = pd.read_csv("datasets/ph_movies.csv")
     if language == 'Korean':
