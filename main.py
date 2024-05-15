@@ -9,10 +9,13 @@ def load_data():
     # tmdb_df = pd.read_csv("datasets/TMDB_movie_dataset_v11.csv")
     # newtmdb_df = pd.read_csv("tmdb_df.csv")
     # newtmdb_df = pd.read_csv("english_movies2.csv")
-    tmdb = "https://drive.google.com/file/d/19DMYWZJXxPNJ9pbWgVJ2C7k2Yst40ML5/view?usp=sharing"
-    tmdb = "https://drive.google.com/uc?id=" + tmdb.split('/')[-2]
-    tmdb_df = pd.read_csv(tmdb)
-    return tmdb_df
+    # tmdb = "https://drive.google.com/file/d/19DMYWZJXxPNJ9pbWgVJ2C7k2Yst40ML5/view?usp=sharing"
+    # tmdb = "https://drive.google.com/uc?id=" + tmdb.split('/')[-2]
+    # tmdb_df = pd.read_csv(tmdb)
+    ph_movies = pd.read_csv("datasets/ph_movies.csv")
+    korean_movies = pd.read_csv("datasets/korean_movies.csv")
+    japan_movies = pd.read_csv("datasets/japanese_movies.csv")
+    return ph_movies, korean_movies, japan_movies
 
 def preprocess_dataframes(tmdb_df):
     """
@@ -40,12 +43,13 @@ def select_language(language):
     # if language == 'English':
     #     newtmdb_df = preprocess_dataframes(tmdb_df)
     #     newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
+    ph_movies, korean_movies, japan_movies = load_data()
     if language == 'Filipino':
-        newtmdb_df = pd.read_csv("datasets/ph_movies.csv")
+        newtmdb_df = ph_movies
     if language == 'Korean':
-        newtmdb_df = pd.read_csv("datasets/korean_movies.csv")
+        newtmdb_df = korean_movies
     if language == 'Japanese':
-        newtmdb_df = pd.read_csv("datasets/japanese_movies.csv")
+        newtmdb_df = japan_movies
     return newtmdb_df
 
 def cluster_movies_by_genre(newtmdb_df):
@@ -79,3 +83,25 @@ def recommend_movies_nearest_updated_cosine(movie_title, genres_encoded, newtmdb
         recommended_movie_titles.remove(movie_title)
 
     return recommended_movie_titles
+
+# import psutil
+
+# # Get memory usage in bytes
+# memory_usage = psutil.virtual_memory()
+
+# # Total physical memory (in bytes)
+# total_memory = memory_usage.total
+
+# # Available memory (in bytes)
+# available_memory = memory_usage.available
+
+# # Used memory (in bytes)
+# used_memory = memory_usage.used
+
+# # Percentage of memory usage
+# memory_percent = memory_usage.percent
+
+# print(f"Total memory: {total_memory} bytes")
+# print(f"Available memory: {available_memory} bytes")
+# print(f"Used memory: {used_memory} bytes")
+# print(f"Memory usage percentage: {memory_percent}%")
