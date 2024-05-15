@@ -16,6 +16,8 @@ movie_search = Movie()
 BASE_TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w500/"
 DEFAULT_POSTER = "https://via.placeholder.com/500x750.png?text=No+Poster+Available"
 
+genres = ['action', 'science fiction', 'adventure', 'drama', 'crime', 'thriller', 'fantasy', 'comedy', 'romance', 'western', 'mystery', 'war', 'animation', 'family', 'horror', 'music', 'history', 'tv movie', 'documentary']
+
 def fetch_movie_details(movie_title):
     movie_id = None
     try:
@@ -109,25 +111,7 @@ def main():
     )
     
     st.title("🎬💪 MovieFlex: Movie Recommendation System")
-
-    # print(sys.maxsize)
-
-    tmdb_df = load_data()
-    # newtmdb_df = preprocess_dataframes(tmdb_df)
-
     st.write("Welcome to MovieFlex!✨ Get started by entering your favorite movie!")
-    auto_trigger = False
-    
-    if 'recommendations' not in st.session_state:
-        st.session_state.recommendations = []
-    if 'potential_matches' not in st.session_state:
-        st.session_state.potential_matches = []
-    if 'movie_input' not in st.session_state:
-        st.session_state.movie_input = ""
-    if 'reset_triggered' not in st.session_state:
-        st.session_state.reset_triggered = False
-    if 'surprise_triggered' not in st.session_state:
-        st.session_state.surprise_triggered = False
 
     # Choose a language for the movie results
     language = st.radio(
@@ -138,13 +122,35 @@ def main():
     # Display the selected option
     st.write("You selected:", language)
 
-    newtmdb_df = select_language(language, tmdb_df)
-    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
+    auto_trigger = False
+
+    if 'recommendations' not in st.session_state:
+        st.session_state.recommendations = []
+    if 'potential_matches' not in st.session_state:
+        st.session_state.potential_matches = []
+    if 'movie_input' not in st.session_state:
+        st.session_state.movie_input = ""
+    if 'reset_triggered' not in st.session_state:
+        st.session_state.reset_triggered = False
+    if 'surprise_triggered' not in st.session_state:
+        st.session_state.surprise_triggered = False
+    if 'language' not in st.session_state:
+        st.session_state.language = language
+    if 'search_button' not in st.session_state:
+        st.session_state.search_button = False
 
     # If reset was triggered, set the default value of the input widget to an empty string
     default_value = "" if st.session_state.reset_triggered else st.session_state.movie_input
 
     new_input = st.text_input("🔍 Enter your favorite movie:", value=default_value, key="movie_input")
+
+    tmdb_df = load_data()
+
+    if language != st.session_state.language:
+        st.session_state.language = language
+
+    newtmdb_df = select_language(st.session_state.language, tmdb_df)
+    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
 
     # If there's a change in input, update the session state
     if new_input != st.session_state.movie_input:
@@ -166,13 +172,13 @@ def main():
                     auto_trigger = True  # Setting the flag to trigger automatic recommendations
     col1, col2, col3 = st.columns(3)
 
-    if col1.button('Search', key='btn_get_recommendations') or auto_trigger:
+    if col1.button('Search', key='btn_get_recommendations', on_click=callback) or auto_trigger or st.session_state.search_button:
+        display_chosen_movie(movie_title)
         with st.spinner('Fetching recommendations...'):
             st.session_state.recommendations = recommend_movies_nearest_updated_cosine(
                 movie_title, genres_encoded=genres_encoded, newtmdb_df=newtmdb_df
             )
-        display_chosen_movie(st.session_state.movie_input)
-        display_recommendations(st.session_state.recommendations)
+        display_recommendations(st.session_state.recommendations, newtmdb_df)
 
     if col2.button('Surprise Me!', key='btn_surprise_me'):
         st.session_state.recommendations = []
@@ -190,8 +196,10 @@ def main():
         st.session_state.recommendations = []
         st.session_state.potential_matches = []  # Clearing potential matches on reset
         st.session_state.reset_triggered = True  # Set the reset flag
+        st.session_state.search_button = False
         st.experimental_rerun()
 
+@st.cache_data
 def display_chosen_movie(movie_title):
     st.write("You have chosen", movie_title)
 
@@ -218,9 +226,32 @@ def display_chosen_movie(movie_title):
                 unsafe_allow_html=True,
             )
 
-def display_recommendations(recommendations):
+def display_recommendations(recommendations, newtmdb_df):
+    st.subheader("Recommended Movies:")
+
+    if 'selected_genres' not in st.session_state:
+        st.session_state.selected_genres = []
+    
+    selected_genres = []
+
+    selected_genres = st.multiselect("Select Genres:", ['All'] + genres, default='All')
+    st.session_state.selected_genres = handle_special_options(selected_genres)
+
+    # genreco = get_genres_for_recommendations(recommendations, newtmdb_df)
+    # st.write(genreco)
+    # st.write(recommendations)
+    
+    if st.button("Filter movies"):
+        st.balloons()
+        filter_movies = filter_movies_by_genre(recommendations, st.session_state.selected_genres, newtmdb_df)
+        # st.write(recommendations)
+        recommendations = filter_movies
+        # st.write(filter_movies)
+
+    display_movies(recommendations)
+
+def display_movies(recommendations):
     if recommendations:
-        st.subheader("Recommended Movies:")
         for movie in recommendations:
             movie_details = fetch_movie_details(movie)
 
@@ -248,6 +279,41 @@ def display_recommendations(recommendations):
     else:
         st.error("Couldn't find any recommendations for that movie.")
 
+def filter_movies_by_genre(recommendations, selected_genres, newtmdb_df):
+    if selected_genres == genres:
+        return recommendations
+    else:
+        filtered_recommendations = []
+        for movie_title in recommendations:
+            # Find the row in newtmdb_df corresponding to the movie title
+            movie_row = newtmdb_df[newtmdb_df['title'] == movie_title]
+            if not movie_row.empty:
+                # Extract genres for the movie from the DataFrame
+                genres_for_movie = movie_row['genres'].values[0]
+                # Check if any of the selected genres is in the genres for the movie
+                if all(genre in genres_for_movie for genre in selected_genres):
+                    filtered_recommendations.append(movie_title)
+        return filtered_recommendations
+
+def handle_special_options(selected_genres):
+    if 'All' in selected_genres:
+        return genres
+    else:
+        return selected_genres
+
+def callback():
+    st.session_state.search_button = True
+
+def get_genres_for_recommendations(recommendations, newtmdb_df):
+    genres_for_recommendations = []
+    for movie_title in recommendations:
+        # Find the row in newtmdb_df corresponding to the movie title
+        movie_row = newtmdb_df[newtmdb_df['title'] == movie_title]
+        if not movie_row.empty:
+            # Extract genres for the movie from the DataFrame
+            genres_for_movie = movie_row['genres'].values[0]
+            genres_for_recommendations.append(genres_for_movie)
+    return genres_for_recommendations
 
 if __name__ == "__main__":
     main()

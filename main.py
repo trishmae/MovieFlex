@@ -6,7 +6,7 @@ def load_data():
     """
     Loads the data from the CSV files and returns the datasets.
     """
-    tmdb_df = pd.read_csv("TMDB_movie_dataset_v11.csv")
+    tmdb_df = pd.read_csv("datasets/TMDB_movie_dataset_v11.csv")
     # newtmdb_df = pd.read_csv("tmdb_df.csv")
     # newtmdb_df = pd.read_csv("english_movies2.csv")
     # tmdb = "https://drive.google.com/file/d/15Yk5gRIeaElTRyRjNO4NK9dsGQbHf9p1/view?usp=sharing"
@@ -33,28 +33,18 @@ def preprocess_dataframes(tmdb_df):
     
     return newtmdb_df
 
-# def language_dataframes(tmdb_df):
-#     newtmdb_df = preprocess_dataframes(tmdb_df)
-#     all_df = newtmdb_df
-#     english_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
-#     # filipino_df = newtmdb_df[newtmdb_df['original_language'] == 'tl']
-#     # korean_df = newtmdb_df[newtmdb_df['original_language'] == 'ko']
-#     # japanese_df = newtmdb_df[newtmdb_df['original_language'] == 'ja']
-#     return english_df, all_df
-
 def select_language(language, tmdb_df):
-    # english_df, all_df = language_dataframes(tmdb_df)
     if language == 'All':
         newtmdb_df = preprocess_dataframes(tmdb_df)
     if language == 'English':
         newtmdb_df = preprocess_dataframes(tmdb_df)
         newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
     if language == 'Filipino':
-        newtmdb_df = pd.read_csv("ph_movies.csv")
+        newtmdb_df = pd.read_csv("datasets/ph_movies.csv")
     if language == 'Korean':
-        newtmdb_df = pd.read_csv("korean_movies.csv")
+        newtmdb_df = pd.read_csv("datasets/korean_movies.csv")
     if language == 'Japanese':
-        newtmdb_df = pd.read_csv("japanese_movies.csv")
+        newtmdb_df = pd.read_csv("datasets/japanese_movies.csv")
     return newtmdb_df
 
 def cluster_movies_by_genre(newtmdb_df):
@@ -66,7 +56,7 @@ def cluster_movies_by_genre(newtmdb_df):
     newtmdb_df['cluster'] = kmeans.fit_predict(genres_encoded)
     return newtmdb_df, genres_encoded
 
-def recommend_movies_nearest_updated_cosine(movie_title, genres_encoded, newtmdb_df, num_recommendations=10):
+def recommend_movies_nearest_updated_cosine(movie_title, genres_encoded, newtmdb_df, num_recommendations=11):
     """
     Recommends movies based on the provided movie title using cosine similarity.
     """
