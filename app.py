@@ -18,46 +18,6 @@ DEFAULT_POSTER = "https://via.placeholder.com/500x750.png?text=No+Poster+Availab
 
 genres = ['action', 'science fiction', 'adventure', 'drama', 'crime', 'thriller', 'fantasy', 'comedy', 'romance', 'western', 'mystery', 'war', 'animation', 'family', 'horror', 'music', 'history', 'tv movie', 'documentary']
 
-def fetch_movie_details(movie_title):
-    movie_id = None
-    try:
-        search_results = movie_search.search(movie_title)
-        
-        # Check if there are search results
-        if not search_results:
-            return {
-                "id": movie_id,  
-                "poster": DEFAULT_POSTER,
-                "release_date": "Unknown",
-                "rating": "N/A",
-                "overview": "No overview available",
-                "genres": "Unknown"
-            }
-
-        movie_id = search_results[0].id
-        movie_details = movie_search.details(movie_id)
-
-        # Extract the required details from the movie details
-        return {
-            "id": movie_id,  
-            "poster": BASE_TMDB_IMAGE_URL + movie_details.poster_path if movie_details.poster_path else DEFAULT_POSTER,
-            "release_date": movie_details.release_date if hasattr(movie_details, 'release_date') else "Unknown",
-            "rating": str(movie_details.vote_average) if hasattr(movie_details, 'vote_average') else "N/A",
-            "overview": movie_details.overview if hasattr(movie_details, 'overview') else "No overview available",
-            "genres": ", ".join([genre['name'] for genre in movie_details.genres]) if hasattr(movie_details, 'genres') else "Unknown"
-        }
-
-    except Exception as e:
-        print(f"An error occurred while fetching details for {movie_title}: {e}")
-        return {
-            "id": movie_id,  
-            "poster": DEFAULT_POSTER,
-            "release_date": "Unknown",
-            "rating": "N/A",
-            "overview": "No overview available",
-            "genres": "Unknown"
-        }
-
 def main():
     st.markdown(
         """
@@ -150,7 +110,9 @@ def main():
         st.session_state.language = language
 
     newtmdb_df = select_language(st.session_state.language, tmdb_df)
-    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
+    st.session_state.dataset = newtmdb_df
+
+    newtmdb_df, genres_encoded = cluster_movies_by_genre(st.session_state.dataset)
 
     # If there's a change in input, update the session state
     if new_input != st.session_state.movie_input:
@@ -178,9 +140,9 @@ def main():
             st.session_state.recommendations = recommend_movies_nearest_updated_cosine(
                 movie_title, genres_encoded=genres_encoded, newtmdb_df=newtmdb_df
             )
-        display_recommendations(st.session_state.recommendations, newtmdb_df)
+        display_recommendations(st.session_state.recommendations, st.session_state.dataset)
 
-    if col2.button('Surprise Me!', key='btn_surprise_me'):
+    if col2.button('Generate Random Movie', key='btn_surprise_me'):
         st.session_state.recommendations = []
         st.session_state.potential_matches = []  # Clearing potential matches on reset
         st.session_state.reset_triggered = True 
@@ -190,7 +152,7 @@ def main():
             st.session_state.recommendations = recommend_movies_nearest_updated_cosine(
                 movie_title, genres_encoded=genres_encoded, newtmdb_df=newtmdb_df
             )
-        display_recommendations(st.session_state.recommendations)
+        display_recommendations(st.session_state.recommendations, st.session_state.dataset)
 
     if col3.button("Reset", key="btn_reset"):
         st.session_state.recommendations = []
@@ -314,6 +276,62 @@ def get_genres_for_recommendations(recommendations, newtmdb_df):
             genres_for_movie = movie_row['genres'].values[0]
             genres_for_recommendations.append(genres_for_movie)
     return genres_for_recommendations
+
+def get_movie_id(movie_title, newtmdb_df):
+    # Find the row where the title matches the given movie_title
+    movie_row = newtmdb_df[newtmdb_df['title'] == movie_title]
+    
+    # Check if the movie exists in the DataFrame
+    if not movie_row.empty:
+        # Extract and return the movie ID
+        movie_id = movie_row['id'].values[0]
+        return movie_id
+    else:
+        # Handle the case where the movie title is not found
+        return None
+
+def fetch_movie_details(movie_title):
+    movie_id = get_movie_id(movie_title, st.session_state.dataset)
+    # movie_id = None
+    try:
+        search_results = movie_search.search(movie_title)
+        
+        # Check if there are search results
+        if not search_results:
+            return {
+                "id": movie_id,  
+                "poster": DEFAULT_POSTER,
+                "release_date": "Unknown",
+                "rating": "N/A",
+                "overview": "No overview available",
+                "genres": "Unknown"
+            }
+
+        # movie_id = search_results[0].id
+        movie_id = get_movie_id(movie_title, st.session_state.dataset)
+        movie_details = movie_search.details(movie_id)
+
+        # Extract the required details from the movie details
+        return {
+            "id": movie_id,  
+            "poster": BASE_TMDB_IMAGE_URL + movie_details.poster_path if movie_details.poster_path else DEFAULT_POSTER,
+            "release_date": movie_details.release_date if hasattr(movie_details, 'release_date') else "Unknown",
+            "rating": str(movie_details.vote_average) if hasattr(movie_details, 'vote_average') else "N/A",
+            "overview": movie_details.overview if hasattr(movie_details, 'overview') else "No overview available",
+            "genres": ", ".join([genre['name'] for genre in movie_details.genres]) if hasattr(movie_details, 'genres') else "Unknown"
+        }
+
+    except Exception as e:
+        print(f"An error occurred while fetching details for {movie_title}: {e}")
+        return {
+            "id": movie_id,  
+            "poster": DEFAULT_POSTER,
+            "release_date": "Unknown",
+            "rating": "N/A",
+            "overview": "No overview available",
+            "genres": "Unknown"
+        }
+
 
 if __name__ == "__main__":
     main()
