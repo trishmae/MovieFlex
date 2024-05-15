@@ -112,10 +112,6 @@ def main():
     
     st.title("🎬💪 MovieFlex: Movie Recommendation System")
     st.write("Welcome to MovieFlex!✨ Get started by entering your favorite movie!")
-    
-    st.balloons()
-    st.toast('Eyy!', icon='😍')
-    st.toast('Keri mo pa ba today?', icon='😭')
 
     # Choose a language for the movie results
     language = st.radio(
@@ -126,13 +122,8 @@ def main():
     # Display the selected option
     st.write("You selected:", language)
 
-    tmdb_df = load_data()
-    # newtmdb_df = preprocess_dataframes(tmdb_df)
-    newtmdb_df = select_language(language, tmdb_df)
-    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
-
     auto_trigger = False
-    
+
     if 'recommendations' not in st.session_state:
         st.session_state.recommendations = []
     if 'potential_matches' not in st.session_state:
@@ -143,6 +134,8 @@ def main():
         st.session_state.reset_triggered = False
     if 'surprise_triggered' not in st.session_state:
         st.session_state.surprise_triggered = False
+    if 'language' not in st.session_state:
+        st.session_state.language = language
     if 'search_button' not in st.session_state:
         st.session_state.search_button = False
 
@@ -150,6 +143,14 @@ def main():
     default_value = "" if st.session_state.reset_triggered else st.session_state.movie_input
 
     new_input = st.text_input("🔍 Enter your favorite movie:", value=default_value, key="movie_input")
+
+    tmdb_df = load_data()
+
+    if language != st.session_state.language:
+        st.session_state.language = language
+
+    newtmdb_df = select_language(st.session_state.language, tmdb_df)
+    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
 
     # If there's a change in input, update the session state
     if new_input != st.session_state.movie_input:
@@ -230,30 +231,22 @@ def display_recommendations(recommendations, newtmdb_df):
 
     if 'selected_genres' not in st.session_state:
         st.session_state.selected_genres = []
-
-    genres = ['action', 'science fiction', 'adventure', 'drama', 'crime', 'thriller', 'fantasy', 'comedy', 'romance', 'western', 'mystery', 'war', 'animation', 'family', 'horror', 'music', 'history', 'tv movie', 'documentary']
     
     selected_genres = []
 
     selected_genres = st.multiselect("Select Genres:", ['All'] + genres, default='All')
-    st.write("You select", selected_genres)
-
     st.session_state.selected_genres = handle_special_options(selected_genres)
 
-    genreco = get_genres_for_recommendations(recommendations, newtmdb_df)
-    st.write(genreco)
-    st.write(recommendations)
-    
-    # Store the selected genres in session state
-    # st.session_state.selected_genres = selected_genres
+    # genreco = get_genres_for_recommendations(recommendations, newtmdb_df)
+    # st.write(genreco)
+    # st.write(recommendations)
     
     if st.button("Filter movies"):
         st.balloons()
-        st.write("You select", selected_genres)
         filter_movies = filter_movies_by_genre(recommendations, st.session_state.selected_genres, newtmdb_df)
-        st.write(recommendations)
+        # st.write(recommendations)
         recommendations = filter_movies
-        st.write(filter_movies)
+        # st.write(filter_movies)
 
     display_movies(recommendations)
 
@@ -287,16 +280,11 @@ def display_movies(recommendations):
         st.error("Couldn't find any recommendations for that movie.")
 
 def filter_movies_by_genre(recommendations, selected_genres, newtmdb_df):
-    # genres = ['action', 'science fiction', 'adventure', 'drama', 'crime', 'thriller', 'fantasy', 'comedy', 'romance', 'western', 'mystery', 'war', 'animation', 'family', 'horror', 'music', 'history', 'tv movie', 'documentary']
-    st.write(selected_genres)
-    st.write(selected_genres == 'All')
     if selected_genres == genres:
-        st.toast('Yes true bih')
         return recommendations
     else:
         filtered_recommendations = []
         for movie_title in recommendations:
-            print(movie_title)
             # Find the row in newtmdb_df corresponding to the movie title
             movie_row = newtmdb_df[newtmdb_df['title'] == movie_title]
             if not movie_row.empty:
@@ -305,11 +293,9 @@ def filter_movies_by_genre(recommendations, selected_genres, newtmdb_df):
                 # Check if any of the selected genres is in the genres for the movie
                 if all(genre in genres_for_movie for genre in selected_genres):
                     filtered_recommendations.append(movie_title)
-                    print(filtered_recommendations)
         return filtered_recommendations
 
 def handle_special_options(selected_genres):
-    # genres = ['action', 'science fiction', 'adventure', 'drama', 'crime', 'thriller', 'fantasy', 'comedy', 'romance', 'western', 'mystery', 'war', 'animation', 'family', 'horror', 'music', 'history', 'tv movie', 'documentary']
     if 'All' in selected_genres:
         return genres
     else:

@@ -33,17 +33,10 @@ def preprocess_dataframes(tmdb_df):
     
     return newtmdb_df
 
-# def language_dataframes(tmdb_df):
-#     newtmdb_df = preprocess_dataframes(tmdb_df)
-#     all_df = newtmdb_df
-#     english_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
-#     # filipino_df = newtmdb_df[newtmdb_df['original_language'] == 'tl']
-#     # korean_df = newtmdb_df[newtmdb_df['original_language'] == 'ko']
-#     # japanese_df = newtmdb_df[newtmdb_df['original_language'] == 'ja']
-#     return english_df, all_df
-
 def select_language(language, tmdb_df):
-    # english_df, all_df = language_dataframes(tmdb_df)
+    """
+    Selects a language and returns the dataset of the selected language.
+    """
     if language == 'All':
         newtmdb_df = preprocess_dataframes(tmdb_df)
     if language == 'English':
