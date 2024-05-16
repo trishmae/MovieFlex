@@ -109,7 +109,8 @@ def main():
     if language != st.session_state.language:
         st.session_state.language = language
 
-    newtmdb_df = select_language(st.session_state.language)
+    ph_movies, korean_movies, japan_movies = load_data()
+    newtmdb_df = select_language(st.session_state.language, ph_movies, korean_movies, japan_movies)
     st.session_state.dataset = newtmdb_df
 
     newtmdb_df, genres_encoded = cluster_movies_by_genre(st.session_state.dataset)

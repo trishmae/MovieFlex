@@ -36,14 +36,13 @@ def preprocess_dataframes(tmdb_df):
     
     return newtmdb_df
 
-def select_language(language):
+def select_language(language, ph_movies, korean_movies, japan_movies):
     # if language == 'All':
     #     newtmdb_df = tmdb_df
         # newtmdb_df = preprocess_dataframes(tmdb_df)
     # if language == 'English':
     #     newtmdb_df = preprocess_dataframes(tmdb_df)
     #     newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
-    ph_movies, korean_movies, japan_movies = load_data()
     if language == 'Filipino':
         newtmdb_df = ph_movies
     if language == 'Korean':
@@ -83,25 +82,3 @@ def recommend_movies_nearest_updated_cosine(movie_title, genres_encoded, newtmdb
         recommended_movie_titles.remove(movie_title)
 
     return recommended_movie_titles
-
-# import psutil
-
-# # Get memory usage in bytes
-# memory_usage = psutil.virtual_memory()
-
-# # Total physical memory (in bytes)
-# total_memory = memory_usage.total
-
-# # Available memory (in bytes)
-# available_memory = memory_usage.available
-
-# # Used memory (in bytes)
-# used_memory = memory_usage.used
-
-# # Percentage of memory usage
-# memory_percent = memory_usage.percent
-
-# print(f"Total memory: {total_memory} bytes")
-# print(f"Available memory: {available_memory} bytes")
-# print(f"Used memory: {used_memory} bytes")
-# print(f"Memory usage percentage: {memory_percent}%")
