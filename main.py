@@ -15,7 +15,8 @@ def load_data():
     ph_movies = pd.read_csv("datasets/ph_movies.csv")
     korean_movies = pd.read_csv("datasets/korean_movies.csv")
     japan_movies = pd.read_csv("datasets/japanese_movies.csv")
-    return ph_movies, korean_movies, japan_movies
+    english_movies = pd.read_csv("datasets/english_movies.csv")
+    return ph_movies, korean_movies, japan_movies, english_movies
 
 def preprocess_dataframes(tmdb_df):
     """
@@ -36,13 +37,15 @@ def preprocess_dataframes(tmdb_df):
     
     return newtmdb_df
 
-def select_language(language, ph_movies, korean_movies, japan_movies):
+def select_language(language, ph_movies, korean_movies, japan_movies, english_movies):
     # if language == 'All':
     #     newtmdb_df = tmdb_df
         # newtmdb_df = preprocess_dataframes(tmdb_df)
     # if language == 'English':
     #     newtmdb_df = preprocess_dataframes(tmdb_df)
     #     newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
+    if language == 'Filipino':
+        newtmdb_df = english_movies
     if language == 'Filipino':
         newtmdb_df = ph_movies
     if language == 'Korean':
