@@ -76,7 +76,7 @@ def main():
     # Choose a language for the movie results
     language = st.radio(
         "Choose a language for the movie results:",
-        ("Filipino", "Korean", "Japanese")
+        ("English", "Filipino", "Korean", "Japanese")
     )
 
     # Display the selected option
