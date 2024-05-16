@@ -44,7 +44,7 @@ def select_language(language, ph_movies, korean_movies, japan_movies, english_mo
     # if language == 'English':
     #     newtmdb_df = preprocess_dataframes(tmdb_df)
     #     newtmdb_df = newtmdb_df[newtmdb_df['original_language'] == 'en']
-    if language == 'Filipino':
+    if language == 'English':
         newtmdb_df = english_movies
     if language == 'Filipino':
         newtmdb_df = ph_movies
