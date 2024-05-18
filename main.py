@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.cluster import KMeans
 from scipy.spatial import distance
+import ast
 
 def load_data():
     """
@@ -58,6 +59,7 @@ def cluster_movies_by_genre(newtmdb_df):
     """
     Cluster movies by genre and add the cluster labels to the dataframe.
     """
+    newtmdb_df['genres'] = newtmdb_df['genres'].apply(ast.literal_eval)
     genres_encoded = newtmdb_df['genres'].explode().str.get_dummies().groupby(level=0).sum()
     kmeans = KMeans(n_clusters=10, init='k-means++', random_state=42)
     newtmdb_df['cluster'] = kmeans.fit_predict(genres_encoded)

@@ -111,9 +111,10 @@ def main():
 
     ph_movies, korean_movies, japan_movies, english_movies = load_data()
     newtmdb_df = select_language(st.session_state.language, ph_movies, korean_movies, japan_movies, english_movies)
-    st.session_state.dataset = newtmdb_df
+    newtmdb_df, genres_encoded = cluster_movies_by_genre(newtmdb_df)
 
-    newtmdb_df, genres_encoded = cluster_movies_by_genre(st.session_state.dataset)
+    if 'dataset' not in st.session_state:
+        st.session_state.dataset = newtmdb_df
 
     # If there's a change in input, update the session state
     if new_input != st.session_state.movie_input:
@@ -136,12 +137,12 @@ def main():
     col1, col2, col3 = st.columns(3)
 
     if col1.button('Search', key='btn_get_recommendations', on_click=callback) or auto_trigger or st.session_state.search_button:
-        display_chosen_movie(movie_title)
+        display_chosen_movie(movie_title, newtmdb_df)
         with st.spinner('Fetching recommendations...'):
             st.session_state.recommendations = recommend_movies_nearest_updated_cosine(
                 movie_title, genres_encoded=genres_encoded, newtmdb_df=newtmdb_df
             )
-        display_recommendations(st.session_state.recommendations, st.session_state.dataset)
+        display_recommendations(st.session_state.recommendations, newtmdb_df)
 
     if col2.button('Generate Random Movie', key='btn_surprise_me'):
         st.session_state.recommendations = []
@@ -153,7 +154,7 @@ def main():
             st.session_state.recommendations = recommend_movies_nearest_updated_cosine(
                 movie_title, genres_encoded=genres_encoded, newtmdb_df=newtmdb_df
             )
-        display_recommendations(st.session_state.recommendations, st.session_state.dataset)
+        display_recommendations(st.session_state.recommendations, newtmdb_df)
 
     if col3.button("Reset", key="btn_reset"):
         st.session_state.recommendations = []
@@ -163,10 +164,10 @@ def main():
         st.experimental_rerun()
 
 @st.cache_data
-def display_chosen_movie(movie_title):
+def display_chosen_movie(movie_title, newtmdb_df):
     st.write("You have chosen", movie_title)
 
-    movie_details = fetch_movie_details(movie_title)
+    movie_details = fetch_movie_details(movie_title, newtmdb_df)
 
     st.markdown(
                 f"""
@@ -210,12 +211,12 @@ def display_recommendations(recommendations, newtmdb_df):
         recommendations = filter_movies
         # st.write(filter_movies)
 
-    display_movies(recommendations)
+    display_movies(recommendations, newtmdb_df)
 
-def display_movies(recommendations):
+def display_movies(recommendations, newtmdb_df):
     if recommendations:
         for movie in recommendations:
-            movie_details = fetch_movie_details(movie)
+            movie_details = fetch_movie_details(movie, newtmdb_df)
 
             # Display movie details for each row
             st.markdown(
@@ -290,8 +291,8 @@ def get_movie_id(movie_title, newtmdb_df):
         # Handle the case where the movie title is not found
         return None
 
-def fetch_movie_details(movie_title):
-    movie_id = get_movie_id(movie_title, st.session_state.dataset)
+def fetch_movie_details(movie_title, newtmdb_df):
+    movie_id = get_movie_id(movie_title, newtmdb_df)
     # movie_id = None
     try:
         search_results = movie_search.search(movie_title)
@@ -308,7 +309,7 @@ def fetch_movie_details(movie_title):
             }
 
         # movie_id = search_results[0].id
-        movie_id = get_movie_id(movie_title, st.session_state.dataset)
+        movie_id = get_movie_id(movie_title, newtmdb_df)
         movie_details = movie_search.details(movie_id)
 
         # Extract the required details from the movie details
